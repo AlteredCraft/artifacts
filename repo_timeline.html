@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repository Growth: 2009-2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <style>
+        :root {
+            --bg: #FAFAF8;
+            --surface: #FFFFFF;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b6b6b;
+            --text-muted: #999999;
+            --accent: #2563eb;
+            --accent-light: rgba(37, 99, 235, 0.08);
+            --accent-medium: rgba(37, 99, 235, 0.15);
+            --border: #e5e5e5;
+            --grid: #f0f0f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Crimson Pro', Georgia, serif;
+            padding: 3rem 2rem;
+            color: var(--text-primary);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            max-width: 960px;
+        }
+
+        .chart-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .range-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stats-inline {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-inline strong {
+            color: var(--accent);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .stat-divider {
+            color: var(--border);
+            font-size: 1.25rem;
+        }
+
+        .range-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.625rem 1.25rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+
+        .range-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .range-btn:active {
+            transform: scale(0.97);
+        }
+
+        .range-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .range-btn.active:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        .chart-container {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .cta {
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 960px;
+            width: 100%;
+            padding: 1.25rem 1.5rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .cta-logo {
+            height: 36px;
+            flex-shrink: 0;
+        }
+
+        .cta-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .cta-link {
+            flex-shrink: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 0.625rem 1.25rem;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 100px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .cta-link:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 2rem 1rem; }
+            h1 { font-size: 2rem; }
+            .chart-controls { justify-content: center; }
+            .stats-inline { display: none; }
+            .chart-container { padding: 1rem; }
+            .range-buttons { gap: 0.375rem; }
+            .range-btn {
+                padding: 0.5rem 0.875rem;
+                font-size: 0.7rem;
+            }
+            .cta {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+                padding: 1.25rem;
+            }
+            .cta-logo { height: 32px; }
+            .cta-text { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Repository Growth</h1>
+        <p class="subtitle">17 years of building on GitHub</p>
+    </div>
+
+    <div class="chart-wrapper">
+        <div class="chart-controls">
+            <div class="range-buttons">
+                <button class="range-btn active" data-range="all">All Time</button>
+                <button class="range-btn" data-range="postgpt">Post ChatGPT</button>
+            </div>
+            <div class="stats-inline">
+                <span class="stat-inline"><strong>241</strong> repos</span>
+                <span class="stat-divider">·</span>
+                <span class="stat-inline"><strong>17</strong> years</span>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="repoChart"></canvas>
+        </div>
+    </div>
+
+    <div class="cta">
+        <img src="AC-logo.svg" alt="Altered Craft" class="cta-logo">
+        <p class="cta-text">Helping developers navigate AI transformation through practical exploration.</p>
+        <a href="https://alteredcraft.substack.com" class="cta-link">Subscribe</a>
+    </div>
+
+    <script>
+        const repoData = [
+            { date: '2009-04-17', count: 1 },
+            { date: '2010-02-09', count: 2 },
+            { date: '2010-04-05', count: 4 },
+            { date: '2010-04-07', count: 5 },
+            { date: '2010-04-09', count: 6 },
+            { date: '2010-06-09', count: 7 },
+            { date: '2010-07-12', count: 8 },
+            { date: '2010-09-09', count: 9 },
+            { date: '2011-04-03', count: 10 },
+            { date: '2011-06-02', count: 11 },
+            { date: '2011-08-16', count: 12 },
+            { date: '2011-09-13', count: 13 },
+            { date: '2011-10-11', count: 14 },
+            { date: '2011-11-04', count: 15 },
+            { date: '2011-12-09', count: 16 },
+            { date: '2011-12-17', count: 17 },
+            { date: '2012-03-26', count: 18 },
+            { date: '2012-04-09', count: 19 },
+            { date: '2012-05-10', count: 20 },
+            { date: '2012-07-26', count: 21 },
+            { date: '2012-08-11', count: 22 },
+            { date: '2012-09-11', count: 23 },
+            { date: '2012-09-22', count: 24 },
+            { date: '2012-10-09', count: 25 },
+            { date: '2012-10-30', count: 26 },
+            { date: '2012-12-29', count: 27 },
+            { date: '2013-01-07', count: 28 },
+            { date: '2013-02-12', count: 29 },
+            { date: '2013-02-19', count: 30 },
+            { date: '2013-03-29', count: 31 },
+            { date: '2013-04-17', count: 32 },
+            { date: '2013-04-26', count: 33 },
+            { date: '2013-09-19', count: 34 },
+            { date: '2013-10-27', count: 35 },
+            { date: '2013-12-21', count: 36 },
+            { date: '2014-01-04', count: 37 },
+            { date: '2014-02-11', count: 38 },
+            { date: '2014-02-21', count: 39 },
+            { date: '2014-03-16', count: 40 },
+            { date: '2014-09-21', count: 41 },
+            { date: '2014-09-22', count: 42 },
+            { date: '2014-10-06', count: 43 },
+            { date: '2014-10-14', count: 44 },
+            { date: '2015-03-07', count: 46 },
+            { date: '2015-03-14', count: 49 },
+            { date: '2015-03-28', count: 50 },
+            { date: '2015-04-08', count: 51 },
+            { date: '2015-04-14', count: 52 },
+            { date: '2015-05-22', count: 53 },
+            { date: '2015-06-05', count: 54 },
+            { date: '2015-06-21', count: 55 },
+            { date: '2015-07-05', count: 56 },
+            { date: '2015-07-06', count: 57 },
+            { date: '2015-07-19', count: 58 },
+            { date: '2015-07-24', count: 59 },
+            { date: '2015-08-17', count: 60 },
+            { date: '2015-09-05', count: 61 },
+            { date: '2015-10-11', count: 62 },
+            { date: '2015-12-08', count: 63 },
+            { date: '2016-01-05', count: 64 },
+            { date: '2016-01-23', count: 65 },
+            { date: '2016-02-06', count: 66 },
+            { date: '2016-03-14', count: 67 },
+            { date: '2016-05-04', count: 68 },
+            { date: '2016-11-12', count: 69 },
+            { date: '2017-02-02', count: 70 },
+            { date: '2017-02-13', count: 71 },
+            { date: '2018-05-21', count: 73 },
+            { date: '2018-05-22', count: 74 },
+            { date: '2018-09-02', count: 75 },
+            { date: '2018-09-07', count: 76 },
+            { date: '2018-09-15', count: 77 },
+            { date: '2019-02-13', count: 78 },
+            { date: '2019-02-16', count: 79 },
+            { date: '2019-03-11', count: 80 },
+            { date: '2019-03-12', count: 81 },
+            { date: '2019-03-19', count: 82 },
+            { date: '2019-03-31', count: 83 },
+            { date: '2019-05-03', count: 84 },
+            { date: '2019-05-21', count: 85 },
+            { date: '2019-05-28', count: 86 },
+            { date: '2019-05-29', count: 87 },
+            { date: '2019-06-03', count: 88 },
+            { date: '2019-07-11', count: 89 },
+            { date: '2019-09-13', count: 90 },
+            { date: '2019-09-22', count: 91 },
+            { date: '2019-09-25', count: 92 },
+            { date: '2019-10-17', count: 93 },
+            { date: '2019-11-04', count: 94 },
+            { date: '2019-11-05', count: 95 },
+            { date: '2019-12-10', count: 96 },
+            { date: '2019-12-16', count: 97 },
+            { date: '2020-02-17', count: 98 },
+            { date: '2020-02-27', count: 99 },
+            { date: '2020-03-07', count: 100 },
+            { date: '2020-04-13', count: 101 },
+            { date: '2020-06-29', count: 102 },
+            { date: '2020-07-03', count: 103 },
+            { date: '2020-07-18', count: 104 },
+            { date: '2020-07-26', count: 105 },
+            { date: '2020-09-12', count: 106 },
+            { date: '2020-09-18', count: 107 },
+            { date: '2020-09-22', count: 108 },
+            { date: '2020-09-25', count: 110 },
+            { date: '2020-09-26', count: 111 },
+            { date: '2020-09-30', count: 112 },
+            { date: '2020-10-12', count: 113 },
+            { date: '2020-12-01', count: 114 },
+            { date: '2020-12-04', count: 115 },
+            { date: '2020-12-08', count: 116 },
+            { date: '2020-12-26', count: 117 },
+            { date: '2020-12-31', count: 118 },
+            { date: '2021-01-02', count: 119 },
+            { date: '2021-01-11', count: 120 },
+            { date: '2021-02-06', count: 121 },
+            { date: '2021-02-26', count: 122 },
+            { date: '2021-03-07', count: 123 },
+            { date: '2021-05-16', count: 124 },
+            { date: '2021-05-21', count: 125 },
+            { date: '2021-10-18', count: 126 },
+            { date: '2021-11-18', count: 127 },
+            { date: '2021-12-27', count: 128 },
+            { date: '2022-01-07', count: 129 },
+            { date: '2022-01-14', count: 130 },
+            { date: '2022-01-19', count: 131 },
+            { date: '2022-01-25', count: 132 },
+            { date: '2022-01-27', count: 133 },
+            { date: '2022-02-05', count: 134 },
+            { date: '2022-03-05', count: 135 },
+            { date: '2023-01-08', count: 136 },
+            { date: '2023-01-29', count: 137 },
+            { date: '2023-02-03', count: 138 },
+            { date: '2023-05-23', count: 139 },
+            { date: '2023-06-01', count: 140 },
+            { date: '2023-06-03', count: 141 },
+            { date: '2023-06-07', count: 142 },
+            { date: '2023-06-09', count: 143 },
+            { date: '2023-06-15', count: 144 },
+            { date: '2023-06-30', count: 145 },
+            { date: '2023-08-20', count: 146 },
+            { date: '2023-08-22', count: 147 },
+            { date: '2023-09-17', count: 148 },
+            { date: '2023-10-10', count: 149 },
+            { date: '2023-12-24', count: 150 },
+            { date: '2024-01-14', count: 151 },
+            { date: '2024-02-03', count: 152 },
+            { date: '2024-02-08', count: 153 },
+            { date: '2024-02-21', count: 154 },
+            { date: '2024-03-08', count: 155 },
+            { date: '2024-03-24', count: 156 },
+            { date: '2024-04-13', count: 157 },
+            { date: '2024-04-20', count: 158 },
+            { date: '2024-04-26', count: 160 },
+            { date: '2024-04-29', count: 161 },
+            { date: '2024-05-15', count: 162 },
+            { date: '2024-06-04', count: 163 },
+            { date: '2024-06-06', count: 164 },
+            { date: '2024-06-10', count: 165 },
+            { date: '2024-06-16', count: 166 },
+            { date: '2024-06-25', count: 167 },
+            { date: '2024-08-18', count: 168 },
+            { date: '2024-08-24', count: 170 },
+            { date: '2024-08-31', count: 171 },
+            { date: '2024-09-22', count: 172 },
+            { date: '2024-10-03', count: 174 },
+            { date: '2025-02-01', count: 175 },
+            { date: '2025-02-28', count: 176 },
+            { date: '2025-03-29', count: 177 },
+            { date: '2025-04-18', count: 178 },
+            { date: '2025-04-27', count: 179 },
+            { date: '2025-05-08', count: 180 },
+            { date: '2025-05-15', count: 181 },
+            { date: '2025-05-18', count: 182 },
+            { date: '2025-05-28', count: 183 },
+            { date: '2025-05-31', count: 184 },
+            { date: '2025-06-06', count: 187 },
+            { date: '2025-06-18', count: 188 },
+            { date: '2025-06-25', count: 189 },
+            { date: '2025-07-06', count: 190 },
+            { date: '2025-07-18', count: 191 },
+            { date: '2025-07-25', count: 192 },
+            { date: '2025-07-26', count: 193 },
+            { date: '2025-07-31', count: 195 },
+            { date: '2025-08-05', count: 196 },
+            { date: '2025-08-07', count: 197 },
+            { date: '2025-08-10', count: 198 },
+            { date: '2025-08-16', count: 199 },
+            { date: '2025-08-20', count: 200 },
+            { date: '2025-08-28', count: 201 },
+            { date: '2025-08-30', count: 202 },
+            { date: '2025-09-05', count: 203 },
+            { date: '2025-09-09', count: 204 },
+            { date: '2025-09-28', count: 205 },
+            { date: '2025-10-08', count: 206 },
+            { date: '2025-10-16', count: 207 },
+            { date: '2025-10-21', count: 208 },
+            { date: '2025-10-29', count: 209 },
+            { date: '2025-10-30', count: 210 },
+            { date: '2025-11-06', count: 211 },
+            { date: '2025-11-11', count: 213 },
+            { date: '2025-11-14', count: 214 },
+            { date: '2025-11-15', count: 215 },
+            { date: '2025-11-17', count: 216 },
+            { date: '2025-11-18', count: 217 },
+            { date: '2025-11-19', count: 219 },
+            { date: '2025-11-21', count: 222 },
+            { date: '2025-11-23', count: 223 },
+            { date: '2025-11-24', count: 224 },
+            { date: '2025-12-02', count: 225 },
+            { date: '2025-12-03', count: 226 },
+            { date: '2025-12-05', count: 228 },
+            { date: '2025-12-06', count: 229 },
+            { date: '2025-12-10', count: 230 },
+            { date: '2025-12-13', count: 231 },
+            { date: '2025-12-16', count: 232 },
+            { date: '2025-12-18', count: 233 },
+            { date: '2025-12-20', count: 234 },
+            { date: '2025-12-22', count: 235 },
+            { date: '2025-12-29', count: 236 },
+            { date: '2026-01-02', count: 237 },
+            { date: '2026-01-09', count: 238 },
+            { date: '2026-01-11', count: 239 },
+            { date: '2026-01-12', count: 240 },
+            { date: '2026-01-13', count: 241 }
+        ];
+
+        // Convert to {x, y} format with proper Date objects
+        const chartData = repoData.map(d => ({
+            x: new Date(d.date + 'T00:00:00'),
+            y: d.count
+        }));
+
+        // Define time ranges with Y-axis scaling
+        const ranges = {
+            all:     { min: new Date('2009-01-01'), max: new Date('2026-02-01'), yMin: 0 },
+            postgpt: { min: new Date('2022-11-01'), max: new Date('2026-02-01'), yMin: 130 }
+        };
+
+        const ctx = document.getElementById('repoChart').getContext('2d');
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.12)');
+        gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Total Repositories',
+                    data: chartData,
+                    borderColor: '#2563eb',
+                    backgroundColor: gradient,
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.2,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    annotation: {
+                        annotations: {
+                            chatgptLine: {
+                                type: 'line',
+                                xMin: new Date('2022-11-30'),
+                                xMax: new Date('2022-11-30'),
+                                borderColor: '#059669',
+                                borderWidth: 2,
+                                borderDash: [6, 4]
+                            },
+                            chatgptLabel: {
+                                type: 'label',
+                                xValue: new Date('2022-11-30'),
+                                yValue: (ctx) => ctx.chart.scales.y.min + 15,
+                                xAdjust: 50,
+                                yAdjust: 0,
+                                position: 'center',
+                                content: ['ChatGPT'],
+                                backgroundColor: '#059669',
+                                color: '#fff',
+                                font: {
+                                    family: "'JetBrains Mono', monospace",
+                                    size: 10,
+                                    weight: 500
+                                },
+                                padding: { x: 8, y: 5 },
+                                borderRadius: 4
+                            },
+                            pivotLine: {
+                                type: 'line',
+                                xMin: new Date('2025-05-01'),
+                                xMax: new Date('2025-05-01'),
+                                borderColor: '#6366f1',
+                                borderWidth: 2,
+                                borderDash: [6, 4],
+                                display: (ctx) => ctx.chart.scales.x.min > new Date('2020-01-01')
+                            },
+                            pivotLabel: {
+                                type: 'label',
+                                xValue: new Date('2025-05-01'),
+                                yValue: (ctx) => ctx.chart.scales.y.min + 15,
+                                xAdjust: 50,
+                                yAdjust: 0,
+                                position: 'center',
+                                content: ['Pivot to fulltime research'],
+                                backgroundColor: '#6366f1',
+                                color: '#fff',
+                                font: {
+                                    family: "'JetBrains Mono', monospace",
+                                    size: 10,
+                                    weight: 500
+                                },
+                                padding: { x: 8, y: 5 },
+                                borderRadius: 4,
+                                display: (ctx) => ctx.chart.scales.x.min > new Date('2020-01-01')
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#1a1a1a',
+                        bodyColor: '#6b6b6b',
+                        borderColor: '#e5e5e5',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        titleFont: {
+                            family: "'Crimson Pro', Georgia, serif",
+                            size: 14,
+                            weight: 600
+                        },
+                        bodyFont: {
+                            family: "'JetBrains Mono', monospace",
+                            size: 12
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                const dataPoint = context[0].raw;
+                                return dataPoint.x.toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                });
+                            },
+                            label: function(context) {
+                                return `${context.parsed.y} repositories`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        min: ranges.all.min,
+                        max: ranges.all.max,
+                        time: {
+                            unit: 'year',
+                            displayFormats: {
+                                year: 'yyyy',
+                                month: 'MMM yyyy'
+                            }
+                        },
+                        grid: {
+                            color: '#f0f0f0',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#999',
+                            font: {
+                                family: "'JetBrains Mono', monospace",
+                                size: 11
+                            },
+                            maxRotation: 0
+                        },
+                        border: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        grid: {
+                            color: '#f0f0f0',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#999',
+                            font: {
+                                family: "'JetBrains Mono', monospace",
+                                size: 11
+                            },
+                            padding: 8
+                        },
+                        border: {
+                            display: false
+                        }
+                    }
+                },
+                transitions: {
+                    active: {
+                        animation: {
+                            duration: 750,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+
+        // Range button handlers
+        const buttons = document.querySelectorAll('.range-btn');
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const range = btn.dataset.range;
+                const { min, max, yMin } = ranges[range];
+
+                // Update active state
+                buttons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update chart range with animation
+                chart.options.scales.x.min = min;
+                chart.options.scales.x.max = max;
+                chart.options.scales.y.min = yMin;
+
+                // Adjust time unit based on range
+                chart.options.scales.x.time.unit = (range === 'postgpt') ? 'quarter' : 'year';
+
+                chart.update('active');
+            });
+        });
+    </script>
+</body>
+</html>
